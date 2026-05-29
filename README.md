@@ -1,6 +1,10 @@
 # Surgical Patient Flow Intelligence (ML Case Study)
 https://ankushshrikhande.github.io/Surgical-Patient-Flow-Intelligence-Multi-Task-ML-for-Healthcare-Operations/
 
+###
+
+Here you can find interesting INTERACTIVE EDA Dashboard  
+
 https://ankushshrikhande.github.io/Surgical-Patient-Flow-Intelligence-Multi-Task-ML-for-Healthcare-Operations/eda_dashboard.html
 
 
