@@ -50,3 +50,11 @@ We design a **multi-task learning framework**:
 ## 📊 Dataset
 
 Synthetic dataset stored in:
+
+### Tables:
+- `patients`
+- `surgical_encounters`
+- `daily_clinical_status`
+- `outcomes`
+- `hospital_operations_daily`
+
