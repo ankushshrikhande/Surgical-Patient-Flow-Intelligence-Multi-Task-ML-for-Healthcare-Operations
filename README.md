@@ -61,3 +61,8 @@ Synthetic dataset stored in:
 - `outcomes`
 - `hospital_operations_daily`
 
+
+## Clinical Recommendations Dataset
+
+[Download Clinical Recommendations Dataset](./surgical_clinical_recommendations_output.xlsx)
+
