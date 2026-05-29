@@ -1,7 +1,7 @@
 # Surgical Patient Flow Intelligence (ML Case Study)
 https://ankushshrikhande.github.io/Surgical-Patient-Flow-Intelligence-Multi-Task-ML-for-Healthcare-Operations/
 
-https://ankushshrikhande.github.io/eda_dashboard.html/
+
 
 ## 📖 Overview
 This project builds a **multi-task, real-time machine learning system** to support perioperative and postoperative decision-making for surgical inpatients.
