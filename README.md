@@ -64,5 +64,16 @@ Synthetic dataset stored in:
 
 ## Clinical Recommendations Dataset
 
-[Download Clinical Recommendations Dataset](./surgical_clinical_recommendations_output.xlsx)
+Clinical Recommendation Engine Output Dataset
+
+This dataset represents the output of a multi-task machine learning framework designed to support perioperative decision-making. Each row corresponds to a patient-level prediction instance, combining risk scores with actionable recommendations.
+
+Key Features:
+- Risk predictions: readmission probability, discharge readiness
+- Operational signals: ICU requirement, social barriers, care plan completion
+- AI-driven recommendations: mobility escalation, pain management optimization, post-discharge follow-ups, and care coordination
+
+Purpose:
+To bridge predictive analytics with clinical decision-making by generating interpretable, actionable interventions that can reduce length of stay, improve discharge efficiency, and minimize readmissions.
+
 
