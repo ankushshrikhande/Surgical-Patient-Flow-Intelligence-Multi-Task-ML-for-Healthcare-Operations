@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Production Architecture — Surgical Patient Flow Intelligence</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F8F7F4;padding:32px 24px;min-height:100vh}
+  .arch-wrap{max-width:1100px;margin:0 auto}
+  .arch-title{text-align:center;font-size:20px;font-weight:600;color:#1a1a1a;margin-bottom:4px}
+  .arch-sub{text-align:center;font-size:13px;color:#888;margin-bottom:24px}
+
+  .lane-bar{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+  .lane-label{text-align:center;font-size:11px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;padding:7px 4px;border-radius:6px}
+  .ll-src{color:#0C447C;background:#DDEEF9}
+  .ll-feat{color:#085041;background:#D4F0E6}
+  .ll-model{color:#3C3489;background:#E8E6FC}
+  .ll-cons{color:#633806;background:#FAE8C8}
+
+  .main-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;align-items:start}
+  .col{display:flex;flex-direction:column;gap:10px}
+
+  .node{border-radius:10px;border:1px solid;padding:12px;position:relative;background:#fff}
+  .node-title{font-size:12px;font-weight:600;margin-bottom:3px;display:flex;align-items:center;gap:5px}
+  .node-sub{font-size:11px;color:#666;line-height:1.5}
+  .node-tag{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;margin-top:6px}
+  .divider{height:1px;background:#eee;margin:7px 0}
+
+  .n-blue{border-color:#85B7EB;background:#F0F7FE}
+  .n-blue .node-title{color:#0C447C}
+  .n-teal{border-color:#5DCAA5;background:#EAF8F2}
+  .n-teal .node-title{color:#085041}
+  .n-purple{border-color:#AFA9EC;background:#F2F1FE}
+  .n-purple .node-title{color:#3C3489}
+  .n-amber{border-color:#EF9F27;background:#FEF5E4}
+  .n-amber .node-title{color:#633806}
+  .n-red{border-color:#F09595;background:#FEF0F0}
+  .n-red .node-title{color:#791F1F}
+  .n-gray{border-color:#ccc;background:#F5F4F1}
+  .n-gray .node-title{color:#333}
+
+  .tag-blue{background:#B5D4F4;color:#042C53}
+  .tag-teal{background:#9FE1CB;color:#04342C}
+  .tag-purple{background:#CECBF6;color:#26215C}
+  .tag-amber{background:#FAC775;color:#412402}
+  .tag-red{background:#F7C1C1;color:#501313}
+  .tag-gray{background:#D3D1C7;color:#2C2C2A}
+  .tag-green{background:#C0DD97;color:#173404}
+
+  .metric-row{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}
+  .metric{font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px}
+  .m-green{background:#C0DD97;color:#173404}
+  .m-blue{background:#B5D4F4;color:#042C53}
+  .m-purple{background:#CECBF6;color:#26215C}
+  .m-red{background:#F7C1C1;color:#501313}
+
+  .model-node{border-radius:10px;border:1px solid #AFA9EC;background:#F2F1FE;padding:11px;position:relative}
+  .model-badge{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+  .model-name{font-size:12px;font-weight:600;color:#3C3489}
+  .model-sub{font-size:11px;color:#534AB7;line-height:1.4}
+
+  .api-node{border-radius:10px;border:2px solid #EF9F27;background:#FEF5E4;padding:13px;text-align:center}
+  .api-title{font-size:13px;font-weight:700;color:#633806;margin-bottom:4px}
+
+  .pulse-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;vertical-align:middle;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.65)}}
+  .dot-blue{background:#378ADD;animation-delay:0s}
+  .dot-teal{background:#1D9E75;animation-delay:.5s}
+  .dot-purple{background:#534AB7;animation-delay:1s}
+  .dot-amber{background:#BA7517;animation-delay:1.5s}
+
+  .footer-strip{display:flex;gap:6px;margin-top:18px;flex-wrap:wrap;align-items:center;padding:10px 16px;border-radius:8px;background:#fff;border:1px solid #ddd;font-size:12px;color:#555}
+  .footer-strip .sep{color:#bbb;font-size:14px}
+
+  .perf-row{display:flex;gap:4px;align-items:center;margin-top:6px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div class="arch-wrap">
+  <div class="arch-title">Production Architecture — Surgical Patient Flow Intelligence</div>
+  <div class="arch-sub">End-to-end pipeline · raw clinical signals → feature engine → model inference → real-time clinical consumers</div>
+
+  <div class="lane-bar">
+    <div class="lane-label ll-src">📡 Data Sources</div>
+    <div class="lane-label ll-feat">⚙️ Feature &amp; Scoring Engine</div>
+    <div class="lane-label ll-model">🧠 Model Serving</div>
+    <div class="lane-label ll-cons">🖥️ Consumers</div>
+  </div>
+
+  <div class="main-grid">
+
+    <!-- COL 1: DATA SOURCES -->
+    <div class="col">
+      <div class="node n-blue">
+        <div class="node-title"><span class="pulse-dot dot-blue"></span>EHR / EMR System</div>
+        <div class="node-sub">HL7 / FHIR feeds<br>Real-time patient events</div>
+        <span class="node-tag tag-blue">HL7 · FHIR</span>
+      </div>
+      <div class="node n-blue">
+        <div class="node-title"><span class="pulse-dot dot-blue"></span>Bedside Monitors</div>
+        <div class="node-sub">Vitals every 15–30 min<br>Continuous telemetry</div>
+        <span class="node-tag tag-blue">IoT stream</span>
+      </div>
+      <div class="node n-blue">
+        <div class="node-title"><span class="pulse-dot dot-blue"></span>Hospital Ops DB</div>
+        <div class="node-sub">Beds, staff ratios<br>Updated daily</div>
+        <span class="node-tag tag-blue">Daily batch</span>
+      </div>
+      <div class="node n-blue">
+        <div class="node-title"><span class="pulse-dot dot-blue"></span>Lab &amp; Pharmacy</div>
+        <div class="node-sub">Results &amp; medication orders<br>Event-driven ingestion</div>
+        <span class="node-tag tag-blue">Event-driven</span>
+      </div>
+    </div>
+
+    <!-- COL 2: FEATURE ENGINE -->
+    <div class="col">
+      <div class="node n-teal">
+        <div class="node-title"><span class="pulse-dot dot-teal"></span>Real-Time Feature Store</div>
+        <div class="node-sub">Patient-day vectors computed per encounter</div>
+        <div class="divider"></div>
+        <div style="font-size:10px;font-weight:600;color:#085041;margin-bottom:4px">KEY FEATURES</div>
+        <div class="metric-row">
+          <span class="metric m-green">recovery_score</span>
+          <span class="metric m-green">vitals_stability</span>
+          <span class="metric m-green">pain_score</span>
+          <span class="metric m-green">mobility_score</span>
+          <span class="metric m-green">labs_normalized</span>
+        </div>
+        <span class="node-tag tag-teal">Low-latency lookup</span>
+      </div>
+      <div class="node n-teal">
+        <div class="node-title"><span class="pulse-dot dot-teal"></span>Imputation &amp; Encoding</div>
+        <div class="node-sub">Median fill · LabelEncoder<br>Handles missing &amp; categorical data at inference time</div>
+        <span class="node-tag tag-teal">Pre-inference transform</span>
+      </div>
+      <div class="node n-teal">
+        <div class="node-title"><span class="pulse-dot dot-teal"></span>Feature Pipeline v1.0</div>
+        <div class="node-sub">40+ engineered features<br>Versioned, reproducible, MLflow-tracked</div>
+        <span class="node-tag tag-teal">40+ features</span>
+      </div>
+    </div>
+
+    <!-- COL 3: MODEL SERVING -->
+    <div class="col">
+      <div class="model-node">
+        <div class="model-badge">
+          <div class="model-name">Model 1 — Discharge Readiness</div>
+          <span class="metric m-blue">AUROC 0.97</span>
+        </div>
+        <div class="model-sub">Binary classification · Daily per-patient inference</div>
+        <div class="perf-row">
+          <span class="node-tag tag-purple" style="margin-top:0">Highest priority</span>
+          <span class="node-tag tag-green" style="margin-top:0">Top predictor: recovery_score</span>
+        </div>
+      </div>
+
+      <div class="model-node">
+        <div class="model-badge">
+          <div class="model-name">Model 2 — LOS Forecast</div>
+          <span class="metric m-blue">MAE 0.55 days</span>
+        </div>
+        <div class="model-sub">Regression · Continuous update per encounter</div>
+        <span class="node-tag tag-purple" style="margin-top:6px">Bed &amp; capacity planning</span>
+      </div>
+
+      <div class="model-node">
+        <div class="model-badge">
+          <div class="model-name">Model 3 — 30d Readmission Risk</div>
+          <span class="metric m-blue">AUROC 0.88</span>
+        </div>
+        <div class="model-sub">Binary classification · Triggered at discharge</div>
+        <span class="node-tag tag-purple" style="margin-top:6px">Risk stratification</span>
+      </div>
+
+      <div class="model-node" style="border-color:#F09595;background:#FEF0F0">
+        <div class="model-badge">
+          <div class="model-name" style="color:#791F1F">Task 4 — Intervention Rec.</div>
+          <span class="metric m-red">Hybrid</span>
+        </div>
+        <div class="model-sub" style="color:#A32D2D">Rule + ML hybrid engine<br>Prioritised care team action list</div>
+        <span class="node-tag tag-red" style="margin-top:6px">Care pathway optimisation</span>
+      </div>
+
+      <div class="api-node">
+        <div class="api-title">🔌 REST API Gateway</div>
+        <div class="divider" style="background:#e8c97a"></div>
+        <div style="font-size:11px;color:#854F0B;margin-top:4px">FastAPI · &lt;200ms p95 latency</div>
+        <div class="metric-row" style="justify-content:center;margin-top:8px">
+          <span class="metric" style="background:#FAC775;color:#412402">JSON responses</span>
+          <span class="metric" style="background:#FAC775;color:#412402">Auth + rate-limit</span>
+          <span class="metric" style="background:#FAC775;color:#412402">Async workers</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- COL 4: CONSUMERS -->
+    <div class="col">
+      <div class="node n-teal">
+        <div class="node-title">📊 Clinical Dashboard</div>
+        <div class="node-sub">Charge nurse view<br>Real-time discharge queue &amp; risk scores</div>
+        <span class="node-tag tag-teal">Live · Web UI</span>
+      </div>
+      <div class="node n-blue">
+        <div class="node-title">🛏️ Bed Management</div>
+        <div class="node-sub">Ops team alerts<br>Capacity forecasting &amp; turnover planning</div>
+        <span class="node-tag tag-blue">Push alerts</span>
+      </div>
+      <div class="node n-red">
+        <div class="node-title">🚨 EHR Alerts</div>
+        <div class="node-sub">Physician workflow<br>In-context risk flags &amp; intervention prompts</div>
+        <span class="node-tag tag-red">In-EHR widget</span>
+      </div>
+      <div class="node n-gray">
+        <div class="node-title">📈 Monitoring Dashboard</div>
+        <div class="node-sub">MLflow · Data drift alerts<br>Model performance tracking &amp; retraining triggers</div>
+        <span class="node-tag tag-gray">MLOps · Observability</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer-strip">
+    <span><span class="pulse-dot dot-blue"></span>EHR/EMR ingestion</span>
+    <span class="sep">→</span>
+    <span><span class="pulse-dot dot-teal"></span>Feature computation</span>
+    <span class="sep">→</span>
+    <span><span class="pulse-dot dot-purple"></span>Parallel model inference</span>
+    <span class="sep">→</span>
+    <span><span class="pulse-dot dot-amber"></span>REST API dispatch</span>
+    <span class="sep">→</span>
+    <span>🖥️ Clinical consumers</span>
+    <span class="sep">·</span>
+    <span style="font-weight:600;color:#0C447C">&lt;200ms end-to-end</span>
+    <span class="sep">·</span>
+    <span style="font-weight:600;color:#085041">5 tables · 40+ features · 4 models</span>
+  </div>
+</div>
+</body>
+</html>
