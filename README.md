@@ -6,7 +6,9 @@ https://ankushshrikhande.github.io/Surgical-Patient-Flow-Intelligence-Multi-Task
 Here you can find interesting INTERACTIVE EDA Dashboard  
 
 https://ankushshrikhande.github.io/Surgical-Patient-Flow-Intelligence-Multi-Task-ML-for-Healthcare-Operations/eda_dashboard.html
+#### notebook Link 
 
+https://drive.google.com/file/d/1_LE1f9cZhCo4syOOv8oAwmE2C5VxllTL/view?usp=sharing
 
 ## 📖 Overview
 This project builds a **multi-task, real-time machine learning system** to support perioperative and postoperative decision-making for surgical inpatients.
