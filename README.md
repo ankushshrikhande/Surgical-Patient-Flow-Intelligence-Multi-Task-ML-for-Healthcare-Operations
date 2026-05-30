@@ -82,9 +82,13 @@ Key Features:
 - Operational signals: ICU requirement, social barriers, care plan completion
 - AI-driven recommendations: mobility escalation, pain management optimization, post-discharge follow-ups, and care coordination
 
-### Click here for  🏗️ [Production Architecture](https://ankushshrikhande.github.io/Surgical-Patient-Flow-Intelligence-Multi-Task-ML-for-Healthcare-Operations/architecture/production%20architecture.html)
-
 Purpose:
 To bridge predictive analytics with clinical decision-making by generating interpretable, actionable interventions that can reduce length of stay, improve discharge efficiency, and minimize readmissions.
+
+
+### Click here for  🏗️ [Production Architecture](https://ankushshrikhande.github.io/Surgical-Patient-Flow-Intelligence-Multi-Task-ML-for-Healthcare-Operations/architecture/production%20architecture.html)
+
+### Click here for 🔄 [Data Pipeline Architecture](https://ankushshrikhande.github.io/Surgical-Patient-Flow-Intelligence-Multi-Task-ML-for-Healthcare-Operations/architecture/data%20pipeline%20architecture.html)
+
 
 
