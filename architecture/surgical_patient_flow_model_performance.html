@@ -1,0 +1,447 @@
+
+<h2 class="sr-only">Surgical Patient Flow Intelligence — Model Performance Dashboard comparing Discharge Readiness, LOS Prediction, and 30-Day Readmission models</h2>
+
+<style>
+:root {
+  --c-blue-fill: #E6F1FB;
+  --c-blue-stroke: #185FA5;
+  --c-blue-text: #0C447C;
+  --c-teal-fill: #E1F5EE;
+  --c-teal-stroke: #0F6E56;
+  --c-teal-text: #085041;
+  --c-amber-fill: #FAEEDA;
+  --c-amber-stroke: #854F0B;
+  --c-amber-text: #633806;
+  --c-green-fill: #EAF3DE;
+  --c-green-text: #3B6D11;
+  --c-red-fill: #FCEBEB;
+  --c-red-text: #A32D2D;
+  --c-purple-fill: #EEEDFE;
+  --c-purple-text: #3C3489;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --c-blue-fill: #0C447C;
+    --c-blue-stroke: #85B7EB;
+    --c-blue-text: #B5D4F4;
+    --c-teal-fill: #085041;
+    --c-teal-stroke: #5DCAA5;
+    --c-teal-text: #9FE1CB;
+    --c-amber-fill: #633806;
+    --c-amber-stroke: #EF9F27;
+    --c-amber-text: #FAC775;
+    --c-green-fill: #27500A;
+    --c-green-text: #C0DD97;
+    --c-red-fill: #791F1F;
+    --c-red-text: #F7C1C1;
+    --c-purple-fill: #3C3489;
+    --c-purple-text: #CECBF6;
+  }
+}
+.dash { padding: 1rem 0; }
+.section-label { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-secondary); margin: 0 0 10px; }
+.model-header { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 1.5rem; }
+.model-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 14px 16px; position: relative; }
+.model-card.featured { border: 2px solid var(--c-blue-stroke); }
+.model-card .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 4px; margin-bottom: 8px; font-weight: 500; }
+.model-card h3 { font-size: 14px; font-weight: 500; margin: 0 0 4px; color: var(--color-text-primary); }
+.model-card .sub { font-size: 12px; color: var(--color-text-secondary); margin: 0 0 12px; }
+.model-card .metric-row { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.model-card .metric-row:last-child { border-bottom: none; }
+.metric-label { font-size: 12px; color: var(--color-text-secondary); }
+.metric-val { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
+.metric-val.good { color: var(--c-teal-text); }
+.metric-val.warn { color: var(--c-amber-text); }
+.divider { border: none; border-top: 0.5px solid var(--color-border-tertiary); margin: 1.5rem 0; }
+.compare-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 1.5rem; }
+.compare-table th { text-align: left; padding: 8px 10px; font-weight: 500; font-size: 12px; color: var(--color-text-secondary); border-bottom: 0.5px solid var(--color-border-tertiary); }
+.compare-table td { padding: 8px 10px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-primary); }
+.compare-table tr:last-child td { border-bottom: none; }
+.compare-table tr:hover td { background: var(--color-background-secondary); }
+.pill { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+.pill-blue { background: var(--c-blue-fill); color: var(--c-blue-text); }
+.pill-teal { background: var(--c-teal-fill); color: var(--c-teal-text); }
+.pill-amber { background: var(--c-amber-fill); color: var(--c-amber-text); }
+.pill-green { background: var(--c-green-fill); color: var(--c-green-text); }
+.pill-red { background: var(--c-red-fill); color: var(--c-red-text); }
+.pill-purple { background: var(--c-purple-fill); color: var(--c-purple-text); }
+.bar-wrap { background: var(--color-background-secondary); border-radius: 4px; height: 8px; flex: 1; margin: 0 10px; overflow: hidden; }
+.bar-fill { height: 8px; border-radius: 4px; }
+.metric-bar-row { display: flex; align-items: center; margin-bottom: 8px; }
+.metric-bar-label { font-size: 12px; color: var(--color-text-secondary); width: 100px; flex-shrink: 0; }
+.metric-bar-val { font-size: 12px; font-weight: 500; color: var(--color-text-primary); width: 40px; text-align: right; flex-shrink: 0; }
+.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 1.5rem; }
+.chart-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 14px 16px; }
+.chart-card h4 { font-size: 13px; font-weight: 500; margin: 0 0 12px; color: var(--color-text-primary); }
+.chart-legend { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; font-size: 11px; color: var(--color-text-secondary); }
+.chart-legend span { display: flex; align-items: center; gap: 4px; }
+.chart-legend .dot { width: 8px; height: 8px; border-radius: 2px; }
+.insight-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 1.5rem; }
+.insight-card { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px 14px; }
+.insight-card .insight-label { font-size: 11px; color: var(--color-text-secondary); margin: 0 0 4px; }
+.insight-card .insight-val { font-size: 20px; font-weight: 500; color: var(--color-text-primary); margin: 0 0 2px; }
+.insight-card .insight-sub { font-size: 11px; color: var(--color-text-secondary); margin: 0; }
+.delta { font-size: 11px; font-weight: 500; }
+.delta.pos { color: var(--c-teal-text); }
+.delta.neg { color: var(--c-red-text); }
+.full-chart { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 14px 16px; margin-bottom: 1.5rem; }
+.full-chart h4 { font-size: 13px; font-weight: 500; margin: 0 0 12px; color: var(--color-text-primary); }
+.feature-row { display: flex; align-items: center; margin-bottom: 6px; }
+.feature-name { font-size: 12px; color: var(--color-text-secondary); width: 180px; flex-shrink: 0; text-align: right; padding-right: 12px; }
+.feature-bar-wrap { flex: 1; background: var(--color-background-secondary); border-radius: 4px; height: 18px; overflow: hidden; position: relative; }
+.feature-bar { height: 18px; border-radius: 4px; display: flex; align-items: center; padding-left: 6px; }
+.feature-bar span { font-size: 10px; font-weight: 500; }
+</style>
+
+<div class="dash">
+  <p class="section-label">Surgical Patient Flow Intelligence · Model Performance Dashboard</p>
+
+  <div class="model-header">
+    <div class="model-card featured">
+      <span class="badge pill-blue">Classification</span>
+      <h3>Discharge Readiness</h3>
+      <p class="sub">Daily binary prediction · LightGBM</p>
+      <div class="metric-row"><span class="metric-label">AUROC</span><span class="metric-val good">0.971</span></div>
+      <div class="metric-row"><span class="metric-label">AUPRC</span><span class="metric-val good">0.964</span></div>
+      <div class="metric-row"><span class="metric-label">Precision</span><span class="metric-val">0.93</span></div>
+      <div class="metric-row"><span class="metric-label">Recall</span><span class="metric-val">0.91</span></div>
+      <div class="metric-row"><span class="metric-label">F1-Score</span><span class="metric-val">0.92</span></div>
+      <div class="metric-row"><span class="metric-label">vs threshold</span><span class="metric-val good">▲ +17.1 pp</span></div>
+    </div>
+    <div class="model-card">
+      <span class="badge pill-teal">Regression</span>
+      <h3>Length of Stay (LOS)</h3>
+      <p class="sub">Admission + post-op dynamic · LightGBM</p>
+      <div class="metric-row"><span class="metric-label">MAE (admission)</span><span class="metric-val warn">1.14 days</span></div>
+      <div class="metric-row"><span class="metric-label">RMSE (admission)</span><span class="metric-val warn">1.50 days</span></div>
+      <div class="metric-row"><span class="metric-label">MAE (post-op)</span><span class="metric-val good">0.34 days</span></div>
+      <div class="metric-row"><span class="metric-label">RMSE (post-op)</span><span class="metric-val good">0.47 days</span></div>
+      <div class="metric-row"><span class="metric-label">Post-op improvement</span><span class="metric-val good">~70%</span></div>
+      <div class="metric-row"><span class="metric-label">Systematic bias</span><span class="metric-val good">Near zero</span></div>
+    </div>
+    <div class="model-card">
+      <span class="badge pill-amber">Classification</span>
+      <h3>30-Day Readmission</h3>
+      <p class="sub">Encounter-level · LightGBM + threshold tuning</p>
+      <div class="metric-row"><span class="metric-label">AUROC</span><span class="metric-val">0.876</span></div>
+      <div class="metric-row"><span class="metric-label">AUPRC</span><span class="metric-val">0.71</span></div>
+      <div class="metric-row"><span class="metric-label">Precision</span><span class="metric-val">0.74</span></div>
+      <div class="metric-row"><span class="metric-label">Recall</span><span class="metric-val">0.72</span></div>
+      <div class="metric-row"><span class="metric-label">F1-Score</span><span class="metric-val">0.73</span></div>
+      <div class="metric-row"><span class="metric-label">vs threshold</span><span class="metric-val good">▲ +7.6 pp</span></div>
+    </div>
+  </div>
+
+  <hr class="divider">
+  <p class="section-label">Side-by-side metric comparison</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Model</th>
+        <th>Type</th>
+        <th>Algorithm</th>
+        <th>Primary Metric</th>
+        <th>Secondary Metric</th>
+        <th>Precision</th>
+        <th>Recall / MAE</th>
+        <th>F1 / RMSE</th>
+        <th>Threshold Gain</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="font-weight:500">Discharge Readiness</td>
+        <td><span class="pill pill-blue">Binary clf.</span></td>
+        <td>LightGBM</td>
+        <td>AUROC <strong>0.971</strong></td>
+        <td>AUPRC 0.964</td>
+        <td>0.93</td>
+        <td>0.91</td>
+        <td>0.92</td>
+        <td><span class="delta pos">▲ +17.1 pp</span></td>
+      </tr>
+      <tr>
+        <td style="font-weight:500">LOS — Admission</td>
+        <td><span class="pill pill-teal">Regression</span></td>
+        <td>LightGBM</td>
+        <td>MAE <strong>1.14 d</strong></td>
+        <td>RMSE 1.50 d</td>
+        <td>—</td>
+        <td>—</td>
+        <td>—</td>
+        <td>Baseline forecast</td>
+      </tr>
+      <tr>
+        <td style="font-weight:500">LOS — Post-operative</td>
+        <td><span class="pill pill-teal">Regression</span></td>
+        <td>LightGBM</td>
+        <td>MAE <strong>0.34 d</strong></td>
+        <td>RMSE 0.47 d</td>
+        <td>—</td>
+        <td>—</td>
+        <td>—</td>
+        <td><span class="delta pos">▲ ~70% vs adm.</span></td>
+      </tr>
+      <tr>
+        <td style="font-weight:500">30-Day Readmission</td>
+        <td><span class="pill pill-amber">Binary clf.</span></td>
+        <td>LightGBM</td>
+        <td>AUROC <strong>0.876</strong></td>
+        <td>AUPRC 0.71</td>
+        <td>0.74</td>
+        <td>0.72</td>
+        <td>0.73</td>
+        <td><span class="delta pos">▲ +7.6 pp</span></td>
+      </tr>
+      <tr>
+        <td style="font-weight:500">Interventions (Task 4)</td>
+        <td><span class="pill pill-purple">Rule-augmented</span></td>
+        <td>Hybrid rules</td>
+        <td colspan="4" style="color:var(--color-text-secondary); font-size:12px">Derived from Models 1 + 3 · 5 recommendation categories · test set n≈1,000</td>
+        <td>—</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <hr class="divider">
+  <p class="section-label">Classification model AUROC · visual comparison</p>
+
+  <div class="full-chart">
+    <h4>AUROC &amp; AUPRC — classification models</h4>
+    <div class="chart-legend">
+      <span><span class="dot" style="background:#185FA5"></span>AUROC</span>
+      <span><span class="dot" style="background:#1D9E75"></span>AUPRC</span>
+    </div>
+    <div style="position:relative; width:100%; height:200px;">
+      <canvas id="aucChart" role="img" aria-label="Bar chart comparing AUROC and AUPRC for Discharge Readiness (0.971, 0.964) and 30-Day Readmission (0.876, 0.71)">AUROC: Discharge 0.971, Readmission 0.876. AUPRC: Discharge 0.964, Readmission 0.71.</canvas>
+    </div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <h4>LOS model — MAE comparison</h4>
+      <div class="chart-legend"><span><span class="dot" style="background:#1D9E75"></span>MAE (days)</span><span><span class="dot" style="background:#EF9F27;border-radius:0;clip-path:polygon(0 0,100% 0,50% 100%)"></span>RMSE (days)</span></div>
+      <div style="position:relative;width:100%;height:160px;">
+        <canvas id="losChart" role="img" aria-label="Bar chart comparing MAE and RMSE for Admission LOS model (1.14, 1.50) and Post-operative model (0.34, 0.47)">Admission: MAE 1.14, RMSE 1.50. Post-op: MAE 0.34, RMSE 0.47.</canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h4>Precision · recall · F1 — classification models</h4>
+      <div class="chart-legend"><span><span class="dot" style="background:#185FA5"></span>Precision</span><span><span class="dot" style="background:#1D9E75"></span>Recall</span><span><span class="dot" style="background:#534AB7"></span>F1</span></div>
+      <div style="position:relative;width:100%;height:160px;">
+        <canvas id="prfChart" role="img" aria-label="Grouped bar chart of Precision Recall and F1 for Discharge Readiness and 30-Day Readmission models">Discharge: P 0.93 R 0.91 F1 0.92. Readmission: P 0.74 R 0.72 F1 0.73.</canvas>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+  <p class="section-label">LOS post-operative model — key stats</p>
+
+  <div class="insight-grid">
+    <div class="insight-card">
+      <p class="insight-label">MAE (final model)</p>
+      <p class="insight-val">0.547 d</p>
+      <p class="insight-sub">≈ 13 hours average error</p>
+    </div>
+    <div class="insight-card">
+      <p class="insight-label">RMSE (final model)</p>
+      <p class="insight-val">0.710 d</p>
+      <p class="insight-sub">Still under 1 day</p>
+    </div>
+    <div class="insight-card">
+      <p class="insight-label">Systematic bias</p>
+      <p class="insight-val">~0.1 d</p>
+      <p class="insight-sub">Actual 4.9 d · Predicted 4.8 d</p>
+    </div>
+    <div class="insight-card">
+      <p class="insight-label">Discharge AUROC</p>
+      <p class="insight-val">0.971</p>
+      <p class="insight-sub">Near-perfect discrimination</p>
+    </div>
+    <div class="insight-card">
+      <p class="insight-label">Post-op MAE gain</p>
+      <p class="insight-val">~70%</p>
+      <p class="insight-sub">vs admission model</p>
+    </div>
+    <div class="insight-card">
+      <p class="insight-label">Decision threshold</p>
+      <p class="insight-val">0.30</p>
+      <p class="insight-sub">Readmission — recall-optimised</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+  <p class="section-label">Top predictive features by model</p>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <h4>Discharge readiness — top SHAP features</h4>
+      <div id="shap-discharge"></div>
+    </div>
+    <div class="chart-card">
+      <h4>30-day readmission — top XGBoost features</h4>
+      <div id="shap-readmit"></div>
+    </div>
+  </div>
+
+  <hr class="divider">
+  <p class="section-label">Clinical decision thresholds</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Model</th>
+        <th>Zone</th>
+        <th>Probability range</th>
+        <th>Clinical action</th>
+        <th>Priority</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td rowspan="3" style="font-weight:500; vertical-align:top; padding-top:10px">Discharge Readiness</td>
+        <td><span class="pill pill-green">Discharge</span></td>
+        <td>≥ 0.85</td>
+        <td>Proceed with discharge</td>
+        <td><span class="pill pill-blue">High confidence</span></td>
+      </tr>
+      <tr>
+        <td><span class="pill pill-amber">Review</span></td>
+        <td>0.50 – 0.84</td>
+        <td>Clinician review required</td>
+        <td><span class="pill pill-amber">Judgment zone</span></td>
+      </tr>
+      <tr>
+        <td><span class="pill pill-red">Not ready</span></td>
+        <td>&lt; 0.50</td>
+        <td>Continue monitoring</td>
+        <td><span class="pill pill-red">Hold</span></td>
+      </tr>
+      <tr>
+        <td rowspan="3" style="font-weight:500; vertical-align:top; padding-top:10px">30-Day Readmission</td>
+        <td><span class="pill pill-red">High risk</span></td>
+        <td>≥ 0.45</td>
+        <td>Immediate intervention</td>
+        <td><span class="pill pill-red">Urgent</span></td>
+      </tr>
+      <tr>
+        <td><span class="pill pill-amber">Medium risk</span></td>
+        <td>0.30 – 0.44</td>
+        <td>Monitoring + follow-up</td>
+        <td><span class="pill pill-amber">Watch</span></td>
+      </tr>
+      <tr>
+        <td><span class="pill pill-green">Low risk</span></td>
+        <td>&lt; 0.30</td>
+        <td>Standard pathway</td>
+        <td><span class="pill pill-green">Routine</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
+const textColor = isDark ? '#B4B2A9' : '#5F5E5A';
+const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+
+new Chart(document.getElementById('aucChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Discharge Readiness', '30-Day Readmission'],
+    datasets: [
+      { label: 'AUROC', data: [0.971, 0.876], backgroundColor: '#185FA5', borderRadius: 4 },
+      { label: 'AUPRC', data: [0.964, 0.71], backgroundColor: '#1D9E75', borderRadius: 4 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { min: 0.6, max: 1.0, ticks: { color: textColor, font: { size: 11 }, callback: v => v.toFixed(2) }, grid: { color: gridColor } },
+      x: { ticks: { color: textColor, font: { size: 11 } }, grid: { display: false } }
+    }
+  }
+});
+
+new Chart(document.getElementById('losChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Admission model', 'Post-op model'],
+    datasets: [
+      { label: 'MAE (days)', data: [1.14, 0.34], backgroundColor: '#1D9E75', borderRadius: 4 },
+      { label: 'RMSE (days)', data: [1.50, 0.47], backgroundColor: '#EF9F27', borderRadius: 4 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { min: 0, ticks: { color: textColor, font: { size: 11 }, callback: v => v.toFixed(2) + ' d' }, grid: { color: gridColor } },
+      x: { ticks: { color: textColor, font: { size: 11 } }, grid: { display: false } }
+    }
+  }
+});
+
+new Chart(document.getElementById('prfChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Discharge Readiness', '30-Day Readmission'],
+    datasets: [
+      { label: 'Precision', data: [0.93, 0.74], backgroundColor: '#185FA5', borderRadius: 4 },
+      { label: 'Recall', data: [0.91, 0.72], backgroundColor: '#1D9E75', borderRadius: 4 },
+      { label: 'F1-Score', data: [0.92, 0.73], backgroundColor: '#534AB7', borderRadius: 4 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { min: 0.6, max: 1.0, ticks: { color: textColor, font: { size: 11 }, callback: v => v.toFixed(2) }, grid: { color: gridColor } },
+      x: { ticks: { color: textColor, font: { size: 11 } }, grid: { display: false } }
+    }
+  }
+});
+
+const dischargeFeatures = [
+  { name: 'recovery_score', val: 0.30 },
+  { name: 'care_plan_complete', val: 0.22 },
+  { name: 'target_discharge_day', val: 0.18 },
+  { name: 'vitals_stability', val: 0.14 },
+  { name: 'social_barrier_flag', val: 0.10 },
+  { name: 'pain_score', val: 0.08 },
+  { name: 'postop_day', val: 0.06 },
+  { name: 'asa_class', val: 0.04 },
+];
+
+const readmitFeatures = [
+  { name: 'complications_count', val: 0.26 },
+  { name: 'comorbidity_index', val: 0.20 },
+  { name: 'surgery_complexity', val: 0.16 },
+  { name: 'social_barrier_flag', val: 0.13 },
+  { name: 'age', val: 0.10 },
+  { name: 'los_days', val: 0.08 },
+  { name: 'bmi', val: 0.07 },
+];
+
+function renderFeatureBars(containerId, features, color) {
+  const el = document.getElementById(containerId);
+  const max = features[0].val;
+  el.innerHTML = features.map(f => `
+    <div class="feature-row">
+      <span class="feature-name">${f.name}</span>
+      <div class="feature-bar-wrap">
+        <div class="feature-bar" style="width:${(f.val/max*100).toFixed(0)}%;background:${color};">
+          <span style="color:#fff; font-size:10px; font-weight:500">${f.val.toFixed(2)}</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+renderFeatureBars('shap-discharge', dischargeFeatures, '#185FA5');
+renderFeatureBars('shap-readmit', readmitFeatures, '#854F0B');
+</script>

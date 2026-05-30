@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Pipeline Architecture</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F0EEE9;padding:36px 28px;min-height:100vh}
+  .wrap{max-width:1020px;margin:0 auto}
+
+  .header{text-align:center;margin-bottom:28px}
+  .header h1{font-size:22px;font-weight:700;color:#1a1a1a;margin-bottom:5px}
+  .header p{font-size:13px;color:#777}
+
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px}
+  .stat-card{background:#fff;border-radius:10px;border:1px solid #e0ddd6;padding:12px 14px;text-align:center}
+  .stat-val{font-size:20px;font-weight:700;margin-bottom:2px}
+  .stat-lbl{font-size:11px;color:#888;font-weight:500;text-transform:uppercase;letter-spacing:0.05em}
+  .sv-blue{color:#0C447C}.sv-teal{color:#085041}.sv-purple{color:#3C3489}.sv-amber{color:#633806}
+
+  .pipeline{display:flex;flex-direction:column;gap:0}
+
+  .stage-row{display:grid;grid-template-columns:180px 1fr 130px 1fr;align-items:stretch;border-radius:0;border-bottom:1px solid #e8e5de;background:#fff;transition:background 0.15s;position:relative}
+  .stage-row:first-child{border-radius:12px 12px 0 0}
+  .stage-row:last-child{border-radius:0 0 12px 12px;border-bottom:none}
+  .stage-row:hover{background:#FAFAF8}
+
+  .thead-row{display:grid;grid-template-columns:180px 1fr 130px 1fr;background:#1a2a4a;border-radius:12px 12px 0 0;margin-bottom:0}
+  .thead-row .th{padding:12px 16px;font-size:11px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:#a8c0e8}
+
+  .cell{padding:14px 16px;display:flex;flex-direction:column;justify-content:center;gap:4px}
+  .cell-stage{border-right:3px solid;padding-left:0px}
+
+  .stage-pill{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700;width:fit-content}
+  .stage-num{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0}
+
+  .s-ingestion   {border-color:#378ADD;background:#F0F7FE}.s-ingestion   .stage-pill{background:#DDEEF9;color:#0C447C}.s-ingestion   .stage-num{background:#0C447C;color:#fff}
+  .s-storage     {border-color:#1D9E75;background:#EAF8F2}.s-storage     .stage-pill{background:#D4F0E6;color:#085041}.s-storage     .stage-num{background:#085041;color:#fff}
+  .s-feature     {border-color:#534AB7;background:#F2F1FE}.s-feature     .stage-pill{background:#E8E6FC;color:#3C3489}.s-feature     .stage-num{background:#3C3489;color:#fff}
+  .s-inference   {border-color:#D85A30;background:#FEF0EA}.s-inference   .stage-pill{background:#FAE8DC;color:#712B13}.s-inference   .stage-num{background:#712B13;color:#fff}
+  .s-result      {border-color:#BA7517;background:#FEF5E4}.s-result      .stage-pill{background:#FAE8C8;color:#633806}.s-result      .stage-num{background:#633806;color:#fff}
+  .s-monitoring  {border-color:#639922;background:#F3F8E8}.s-monitoring  .stage-pill{background:#E4F2CC;color:#27500A}.s-monitoring  .stage-num{background:#27500A;color:#fff}
+  .s-alerting    {border-color:#A32D2D;background:#FEF0F0}.s-alerting    .stage-pill{background:#FCDEDE;color:#791F1F}.s-alerting    .stage-num{background:#791F1F;color:#fff}
+
+  .comp-name{font-size:13px;font-weight:600;color:#1a1a1a}
+  .comp-desc{font-size:11px;color:#888;line-height:1.4}
+
+  .freq-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px}
+  .freq-event{background:#FEF0F0;color:#791F1F}
+  .freq-cont {background:#EAF8F2;color:#085041}
+  .freq-15min{background:#E8E6FC;color:#3C3489}
+  .freq-ondem{background:#FAE8DC;color:#712B13}
+  .freq-every{background:#FAE8C8;color:#633806}
+  .freq-daily{background:#E4F2CC;color:#27500A}
+
+  .pulse-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:middle;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.6)}}
+  .dot-blue  {background:#378ADD;animation-delay:0s}
+  .dot-teal  {background:#1D9E75;animation-delay:.4s}
+  .dot-purple{background:#534AB7;animation-delay:.8s}
+  .dot-coral {background:#D85A30;animation-delay:1.2s}
+  .dot-amber {background:#BA7517;animation-delay:1.6s}
+  .dot-green {background:#639922;animation-delay:2.0s}
+  .dot-red   {background:#A32D2D;animation-delay:2.4s}
+
+  .tech-chips{display:flex;flex-wrap:wrap;gap:5px}
+  .chip{font-size:10px;font-weight:600;padding:3px 8px;border-radius:5px;border:1px solid}
+  .chip-blue  {background:#DDEEF9;color:#042C53;border-color:#85B7EB}
+  .chip-teal  {background:#D4F0E6;color:#04342C;border-color:#5DCAA5}
+  .chip-purple{background:#E8E6FC;color:#26215C;border-color:#AFA9EC}
+  .chip-coral {background:#FAE8DC;color:#4A1B0C;border-color:#F0997B}
+  .chip-amber {background:#FAE8C8;color:#412402;border-color:#EF9F27}
+  .chip-green {background:#E4F2CC;color:#173404;border-color:#97C459}
+  .chip-red   {background:#FCDEDE;color:#501313;border-color:#F09595}
+
+  .connector{display:flex;align-items:center;justify-content:center;height:12px;position:relative}
+  .connector-line{width:2px;height:12px;background:#ddd;margin:0 auto}
+
+  .footer{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px 16px;border-radius:10px;background:#fff;border:1px solid #e0ddd6;margin-top:16px;font-size:12px;color:#666}
+  .footer .sep{color:#ccc}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>Data Pipeline Architecture</h1>
+    <p>Surgical Patient Flow Intelligence · End-to-end ML data pipeline</p>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-val sv-blue">7</div>
+      <div class="stat-lbl">Pipeline Stages</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val sv-teal">&lt;30min</div>
+      <div class="stat-lbl">Feature Refresh</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val sv-purple">&lt;200ms</div>
+      <div class="stat-lbl">Inference Latency p95</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val sv-amber">4</div>
+      <div class="stat-lbl">ML Models Served</div>
+    </div>
+  </div>
+
+  <div class="pipeline">
+    <!-- HEADER -->
+    <div class="thead-row">
+      <div class="th">Stage</div>
+      <div class="th">Component</div>
+      <div class="th">Frequency</div>
+      <div class="th">Technology Stack</div>
+    </div>
+
+    <!-- 1. INGESTION -->
+    <div class="stage-row s-ingestion">
+      <div class="cell cell-stage">
+        <div class="stage-pill">
+          <span class="stage-num">1</span>
+          <span><span class="pulse-dot dot-blue"></span>Ingestion</span>
+        </div>
+      </div>
+      <div class="cell">
+        <div class="comp-name">HL7 / FHIR Listener</div>
+        <div class="comp-desc">Real-time clinical event capture from EHR/EMR systems, bedside monitors, labs &amp; pharmacy</div>
+      </div>
+      <div class="cell">
+        <span class="freq-badge freq-event">⚡ Event-driven</span>
+      </div>
+      <div class="cell">
+        <div class="tech-chips">
+          <span class="chip chip-blue">Apache Kafka</span>
+          <span class="chip chip-blue">Azure Event Hub</span>
+          <span class="chip chip-blue">OAuth 2.0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. RAW STORAGE -->
+    <div class="stage-row s-storage">
+      <div class="cell cell-stage">
+        <div class="stage-pill">
+          <span class="stage-num">2</span>
+          <span><span class="pulse-dot dot-teal"></span>Raw Storage</span>
+        </div>
+      </div>
+      <div class="cell">
+        <div class="comp-name">Clinical Data Lake</div>
+        <div class="comp-desc">Durable, schema-on-read storage for all raw patient events and operational records</div>
+      </div>
+      <div class="cell">
+        <span class="freq-badge freq-cont">🔄 Continuous</span>
+      </div>
+      <div class="cell">
+        <div class="tech-chips">
+          <span class="chip chip-teal">Azure Data Lake</span>
+          <span class="chip chip-teal">AWS S3</span>
+          <span class="chip chip-teal">Parquet</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. FEATURE COMPUTATION -->
+    <div class="stage-row s-feature">
+      <div class="cell cell-stage">
+        <div class="stage-pill">
+          <span class="stage-num">3</span>
+          <span><span class="pulse-dot dot-purple"></span>Feature Computation</span>
+        </div>
+      </div>
+      <div class="cell">
+        <div class="comp-name">Feature Pipeline v1.0</div>
+        <div class="comp-desc">40+ engineered features per patient-day · recovery_score, vitals_stability, mobility_score, labs_normalized</div>
+      </div>
+      <div class="cell">
+        <span class="freq-badge freq-15min">🕐 Every 15–30 min</span>
+      </div>
+      <div class="cell">
+        <div class="tech-chips">
+          <span class="chip chip-purple">Apache Spark</span>
+          <span class="chip chip-purple">Feast</span>
+          <span class="chip chip-purple">LabelEncoder</span>
+          <span class="chip chip-purple">Median Imputation</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. MODEL INFERENCE -->
+    <div class="stage-row s-inference">
+      <div class="cell cell-stage">
+        <div class="stage-pill">
+          <span class="stage-num">4</span>
+          <span><span class="pulse-dot dot-coral"></span>Model Inference</span>
+        </div>
+      </div>
+      <div class="cell">
+        <div class="comp-name">Scoring Microservice</div>
+        <div class="comp-desc">Parallel inference for 4 models — discharge readiness, LOS forecast, 30d readmission risk, intervention recommendation</div>
+      </div>
+      <div class="cell">
+        <span class="freq-badge freq-ondem">⚙️ On-demand + scheduled</span>
+      </div>
+      <div class="cell">
+        <div class="tech-chips">
+          <span class="chip chip-coral">FastAPI</span>
+          <span class="chip chip-coral">Docker</span>
+          <span class="chip chip-coral">Kubernetes</span>
+          <span class="chip chip-coral">&lt;200ms p95</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. RESULT STORAGE -->
+    <div class="stage-row s-result">
+      <div class="cell cell-stage">
+        <div class="stage-pill">
+          <span class="stage-num">5</span>
+          <span><span class="pulse-dot dot-amber"></span>Result Storage</span>
+        </div>
+      </div>
+      <div class="cell">
+        <div class="comp-name">Prediction Store</div>
+        <div class="comp-desc">Low-latency read access for dashboards and alerts · persists all model scores per patient-day</div>
+      </div>
+      <div class="cell">
+        <span class="freq-badge freq-every">💾 Every inference</span>
+      </div>
+      <div class="cell">
+        <div class="tech-chips">
+          <span class="chip chip-amber">PostgreSQL</span>
+          <span class="chip chip-amber">Redis</span>
+          <span class="chip chip-amber">TTL cache</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. MONITORING -->
+    <div class="stage-row s-monitoring">
+      <div class="cell cell-stage">
+        <div class="stage-pill">
+          <span class="stage-num">6</span>
+          <span><span class="pulse-dot dot-green"></span>Monitoring</span>
+        </div>
+      </div>
+      <div class="cell">
+        <div class="comp-name">Drift &amp; Performance Tracker</div>
+        <div class="comp-desc">Tracks data drift, model degradation and feature distribution shifts — triggers automated retraining alerts</div>
+      </div>
+      <div class="cell">
+        <span class="freq-badge freq-daily">📊 Daily + real-time</span>
+      </div>
+      <div class="cell">
+        <div class="tech-chips">
+          <span class="chip chip-green">MLflow</span>
+          <span class="chip chip-green">EvidentlyAI</span>
+          <span class="chip chip-green">Grafana</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. ALERTING -->
+    <div class="stage-row s-alerting">
+      <div class="cell cell-stage">
+        <div class="stage-pill">
+          <span class="stage-num">7</span>
+          <span><span class="pulse-dot dot-red"></span>Alerting</span>
+        </div>
+      </div>
+      <div class="cell">
+        <div class="comp-name">Clinical Notification Engine</div>
+        <div class="comp-desc">Pushes discharge alerts to charge nurses, LOS forecasts to bed management, risk flags to physician EHR workflow</div>
+      </div>
+      <div class="cell">
+        <span class="freq-badge freq-event">⚡ Event-driven</span>
+      </div>
+      <div class="cell">
+        <div class="tech-chips">
+          <span class="chip chip-red">EHR Webhook</span>
+          <span class="chip chip-red">PagerDuty</span>
+          <span class="chip chip-red">REST push</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <span><span class="pulse-dot dot-blue" style="animation-delay:0s"></span>Ingest</span>
+    <span class="sep">→</span>
+    <span><span class="pulse-dot dot-teal" style="animation-delay:.3s"></span>Store</span>
+    <span class="sep">→</span>
+    <span><span class="pulse-dot dot-purple" style="animation-delay:.6s"></span>Featurise</span>
+    <span class="sep">→</span>
+    <span><span class="pulse-dot dot-coral" style="animation-delay:.9s"></span>Infer</span>
+    <span class="sep">→</span>
+    <span><span class="pulse-dot dot-amber" style="animation-delay:1.2s"></span>Persist</span>
+    <span class="sep">→</span>
+    <span><span class="pulse-dot dot-green" style="animation-delay:1.5s"></span>Monitor</span>
+    <span class="sep">→</span>
+    <span><span class="pulse-dot dot-red" style="animation-delay:1.8s"></span>Alert</span>
+    <span class="sep">·</span>
+    <span style="font-weight:700;color:#0C447C">Target SLA: &lt;200ms p95 · OAuth 2.0 auth</span>
+  </div>
+
+</div>
+</body>
+</html>
