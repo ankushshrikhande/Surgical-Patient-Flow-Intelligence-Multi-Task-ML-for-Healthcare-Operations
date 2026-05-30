@@ -13,6 +13,9 @@ https://drive.google.com/file/d/1_LE1f9cZhCo4syOOv8oAwmE2C5VxllTL/view?usp=shari
 ## 📖 Overview
 This project builds a **multi-task, real-time machine learning system** to support perioperative and postoperative decision-making for surgical inpatients.
 
+# 🏗️ [Production Architecture](https://ankushshrikhande.github.io/Surgical-Patient-Flow-Intelligence-Multi-Task-ML-for-Healthcare-Operations/architecture/production%20architecture.html)
+
+
 The system predicts:
 - ✅ Discharge readiness (patient-day level)
 - ✅ Length of Stay (LOS)
