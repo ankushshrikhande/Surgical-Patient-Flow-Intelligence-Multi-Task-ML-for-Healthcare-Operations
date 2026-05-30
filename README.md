@@ -1,28 +1,20 @@
 # Surgical Patient Flow Intelligence (ML Case Study)
 https://ankushshrikhande.github.io/Surgical-Patient-Flow-Intelligence-Multi-Task-ML-for-Healthcare-Operations/
 
-
 ###
-
 Here you can find interesting INTERACTIVE EDA Dashboard  
-
 https://ankushshrikhande.github.io/Surgical-Patient-Flow-Intelligence-Multi-Task-ML-for-Healthcare-Operations/eda_dashboard.html
-#### notebook Link 
 
+#### notebook Link 
 https://drive.google.com/file/d/1_LE1f9cZhCo4syOOv8oAwmE2C5VxllTL/view?usp=sharing
 
 ## 📖 Overview
-This project builds a **multi-task, real-time machine learning system** to support perioperative and postoperative decision-making for surgical inpatients.
-
-
-
-
+This project builds a **multi-task, real-time machine learning system** to support perioperative and postoperative decision-making for surgical inpatients
 The system predicts:
 - ✅ Discharge readiness (patient-day level)
 - ✅ Length of Stay (LOS)
 - ✅ 30-day readmission risk  
 - ✅ Recommended interventions
-
 ---
 
 ## 🎯 Objectives
@@ -31,9 +23,7 @@ The system predicts:
 - Forecast LOS at admission and post-operation
 - Identify readmission risk
 - Recommend interventions to optimize outcomes
-
 ---
-
 ## 🏥 Business Impact
 
 This system helps hospitals:
@@ -41,7 +31,6 @@ This system helps hospitals:
 - Reduce **delayed discharges**
 - Lower **avoidable readmissions**
 - Align **clinical decisions with operations**
-
 ---
 
 ## 🧠 Modeling Approach
@@ -86,6 +75,8 @@ Key Features:
 Purpose:
 To bridge predictive analytics with clinical decision-making by generating interpretable, actionable interventions that can reduce length of stay, improve discharge efficiency, and minimize readmissions.
 
+
+### Click here for [Model Performance](https://github.com/ankushshrikhande/Surgical-Patient-Flow-Intelligence-Multi-Task-ML-for-Healthcare-Operations/blob/main/architecture/surgical_patient_flow_model_performance.html)
 
 ### Click here for  🏗️ [Production Architecture](https://ankushshrikhande.github.io/Surgical-Patient-Flow-Intelligence-Multi-Task-ML-for-Healthcare-Operations/architecture/production%20architecture.html)
 
