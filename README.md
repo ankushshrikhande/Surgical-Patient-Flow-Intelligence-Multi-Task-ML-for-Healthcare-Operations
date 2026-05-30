@@ -76,7 +76,7 @@ Purpose:
 To bridge predictive analytics with clinical decision-making by generating interpretable, actionable interventions that can reduce length of stay, improve discharge efficiency, and minimize readmissions.
 
 
-### Click here for [Model Performance](https://github.com/ankushshrikhande/Surgical-Patient-Flow-Intelligence-Multi-Task-ML-for-Healthcare-Operations/blob/main/architecture/surgical_patient_flow_model_performance.html)
+### Click here for 📊 [Model Performance](https://ankushshrikhande.github.io/Surgical-Patient-Flow-Intelligence-Multi-Task-ML-for-Healthcare-Operations/architecture/surgical_patient_flow_model_performance.html)
 
 ### Click here for  🏗️ [Production Architecture](https://ankushshrikhande.github.io/Surgical-Patient-Flow-Intelligence-Multi-Task-ML-for-Healthcare-Operations/architecture/production%20architecture.html)
 
